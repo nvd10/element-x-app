@@ -65,7 +65,7 @@ jobs:
       - name: Set up signing config (for release builds)
         if: ${{ matrix.variant == 'release' || matrix.variant == 'nightly' }}
         run: |
-          echo "ELEMENT_ANDROID_KEYSTORE_BASE64=${{ secrets.LUNA }}" >> $GITHUB_ENV
+          echo "ELEMENT_ANDROID_KEYSTORE_BASE64=${{ secrets.KEYSTORE_BASE64 }}" >> $GITHUB_ENV
           echo "ELEMENT_ANDROID_KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
           echo "ELEMENT_ANDROID_KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
           echo "ELEMENT_ANDROID_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
@@ -84,8 +84,12 @@ jobs:
           ELEMENT_CALL_RAGESHAKE_URL: ${{ secrets.ELEMENT_CALL_RAGESHAKE_URL }}
         run: |
           ./gradlew :app:assembleGplayDebug -PallWarningsAsErrors=true $CI_GRADLE_ARG_PROPERTIES -Pandroid.injected.build.abi=arm64-v8a
-          # Rename to indicate it's arm64 only
-          mv app/build/outputs/apk/gplay/debug/app-gplay-arm64-v8a-debug.apk app/build/outputs/apk/gplay/debug/elementx-debug-arm64-v8a.apk
+          # Find and rename the APK
+          echo "Files in debug APK directory:"
+          ls -la app/build/outputs/apk/gplay/debug/
+          APK_FILE=$(find app/build/outputs/apk/gplay/debug/ -name "*.apk" -type f | head -n 1)
+          echo "Found APK: $APK_FILE"
+          mv "$APK_FILE" app/build/outputs/apk/gplay/debug/elementx-debug-arm64-v8a.apk
 
       - name: Upload debug APK
         if: ${{ matrix.variant == 'debug' }}
@@ -113,8 +117,12 @@ jobs:
           ORG_GRADLE_PROJECT_ELEMENT_ANDROID_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           ./gradlew :app:assembleGplayRelease -PallWarningsAsErrors=true $CI_GRADLE_ARG_PROPERTIES -Pandroid.injected.build.abi=arm64-v8a
-          # Rename to indicate it's arm64 only
-          mv app/build/outputs/apk/gplay/release/app-gplay-arm64-v8a-release.apk app/build/outputs/apk/gplay/release/elementx-release-arm64-v8a.apk
+          # Find and rename the APK
+          echo "Files in release APK directory:"
+          ls -la app/build/outputs/apk/gplay/release/
+          APK_FILE=$(find app/build/outputs/apk/gplay/release/ -name "*.apk" -type f | head -n 1)
+          echo "Found APK: $APK_FILE"
+          mv "$APK_FILE" app/build/outputs/apk/gplay/release/elementx-release-arm64-v8a.apk
 
       - name: Upload release APK
         if: ${{ matrix.variant == 'release' }}
@@ -142,8 +150,12 @@ jobs:
           ORG_GRADLE_PROJECT_ELEMENT_ANDROID_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           ./gradlew :app:assembleGplayNightly -PallWarningsAsErrors=true $CI_GRADLE_ARG_PROPERTIES -Pandroid.injected.build.abi=arm64-v8a
-          # Rename to indicate it's arm64 only
-          mv app/build/outputs/apk/gplay/nightly/app-gplay-arm64-v8a-nightly.apk app/build/outputs/apk/gplay/nightly/elementx-nightly-arm64-v8a.apk
+          # Find and rename the APK
+          echo "Files in nightly APK directory:"
+          ls -la app/build/outputs/apk/gplay/nightly/
+          APK_FILE=$(find app/build/outputs/apk/gplay/nightly/ -name "*.apk" -type f | head -n 1)
+          echo "Found APK: $APK_FILE"
+          mv "$APK_FILE" app/build/outputs/apk/gplay/nightly/elementx-nightly-arm64-v8a.apk
 
       - name: Upload nightly APK
         if: ${{ matrix.variant == 'nightly' }}
