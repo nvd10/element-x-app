@@ -65,7 +65,7 @@ jobs:
       - name: Set up signing config (for release and nightly builds)
         if: ${{ matrix.variant == 'release' || matrix.variant == 'nightly' }}
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_BASE64: ${{ secrets.LUNA }}
           KEYSTORE_PASSWORD: ${{ secrets.pass }}
           KEY_ALIAS: ${{ secrets.ALIAS }}
           KEY_PASSWORD: ${{ secrets.pass }}
