@@ -62,13 +62,30 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/develop' }}
           
-      - name: Set up signing config (for release builds)
+      - name: Set up signing config (for release and nightly builds)
         if: ${{ matrix.variant == 'release' || matrix.variant == 'nightly' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "ELEMENT_ANDROID_KEYSTORE_BASE64=${{ secrets.KEYSTORE_BASE64 }}" >> $GITHUB_ENV
-          echo "ELEMENT_ANDROID_KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
-          echo "ELEMENT_ANDROID_KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
-          echo "ELEMENT_ANDROID_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
+          # Create the signature directory
+          mkdir -p app/signature
+          
+          # Decode and create the keystore file
+          echo "$KEYSTORE_BASE64" | base64 -d > app/signature/nightly.keystore
+          echo "$KEYSTORE_BASE64" | base64 -d > app/signature/release.keystore
+          
+          # Verify the keystore was created correctly
+          echo "Keystore file size:"
+          ls -la app/signature/
+          
+          # Set environment variables for the build
+          echo "ELEMENT_ANDROID_KEYSTORE_BASE64=$KEYSTORE_BASE64" >> $GITHUB_ENV
+          echo "ELEMENT_ANDROID_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> $GITHUB_ENV
+          echo "ELEMENT_ANDROID_KEY_ALIAS=$KEY_ALIAS" >> $GITHUB_ENV
+          echo "ELEMENT_ANDROID_KEY_PASSWORD=$KEY_PASSWORD" >> $GITHUB_ENV
 
       - name: Assemble signed debug APK (arm64-v8a only)
         if: ${{ matrix.variant == 'debug' }}
