@@ -9,7 +9,7 @@
 package io.element.android.appconfig
 
 object AuthenticationConfig {
-    const val MATRIX_ORG_URL = "https://matix.coola.sbs"
+    const val MATRIX_ORG_URL = "https://matrix.coola.sbs"
 
     /**
      * URL with some docs that explain what's sliding sync and how to add it to your home server.
