@@ -1,4 +1,4 @@
-name: APK Build (Release Only)
+name: Release Signed APK (arm64-v8a only)
 
 on:
   workflow_dispatch:
@@ -8,48 +8,59 @@ on:
 permissions: {}
 
 env:
-  GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx8g -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8
-  CI_GRADLE_ARG_PROPERTIES: --stacktrace --no-configuration-cache
+  GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx8g -Dfile.encoding=UTF-8
+  CI_ARGS: --stacktrace --no-configuration-cache
 
 jobs:
   build:
-    name: Build Signed Release APK (arm64-v8a)
+    name: Build Release APK
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # ---------------------------
+      # Checkout
+      # ---------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      # ---------------------------
+      # Java setup
+      # ---------------------------
+      - name: Setup JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
+      # ---------------------------
+      # Gradle cache
+      # ---------------------------
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
       # ---------------------------
-      # Decode keystore
+      # Create keystore file (FIXED PATH)
       # ---------------------------
       - name: Decode Keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
+          mkdir -p app
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/keystore.jks
 
       # ---------------------------
-      # Build signed release APK
+      # Build SIGNED RELEASE APK (arm64 only)
       # ---------------------------
-      - name: Build Release APK (arm64-v8a only)
+      - name: Build Release APK (signed)
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           ./gradlew :app:assembleGplayRelease \
-            -Pandroid.injected.signing.store.file=keystore.jks \
+            -Pandroid.injected.signing.store.file=app/keystore.jks \
             -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
             -Pandroid.injected.signing.key.password=$KEY_PASSWORD \
-            -PallWarningsAsErrors=true $CI_GRADLE_ARG_PROPERTIES
+            -PallWarningsAsErrors=true $CI_ARGS
 
       # ---------------------------
       # Upload APK
